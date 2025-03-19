@@ -15,6 +15,7 @@ import MyEnrollments from './pages/student/MyEnrollments'
 import Loading from './components/student/Loading'
 
 import Footer from './components/student/Footer';
+import Admin from './pages/admin/Admin'
 import Login from './pages/login/Login'
 import SignUp from './pages/signup/SignUp'
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/coursedetails" element={<CourseDetails />} />
         <Route path="/course-list" element={<CoursesList />} />
         <Route path="/course-list/:input" element={<CoursesList />} />
