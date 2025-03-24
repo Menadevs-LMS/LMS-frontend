@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { setLoading } from '../../store/auth';
 import axios from 'axios';
 
@@ -32,6 +32,7 @@ function Login() {
   const [userEmail, setUserEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
@@ -56,6 +57,13 @@ function Login() {
         localStorage.setItem('accessToken', response.data.data.accessToken);
         localStorage.setItem('user', JSON.stringify(response.data.data.user));
         
+        const userRole = response.data.data.user.role;
+        
+        if (userRole === "instructor") {
+          navigate("/educator");
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       console.error(err);

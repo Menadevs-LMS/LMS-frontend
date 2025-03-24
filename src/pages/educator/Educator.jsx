@@ -4,10 +4,10 @@ import SideBar from '../../components/educator/SideBar'
 import Navbar from '../../components/educator/Navbar'
 import Footer from '../../components/educator/Footer'
 
-const Educator = () => {
+const Educator = ({userData}) => {
     return (
         <div className="text-default min-h-screen bg-white">
-            <Navbar />
+            <Navbar userData={userData}/>
             <div className='flex'>
                 <SideBar />
                 <div className='flex-1'>

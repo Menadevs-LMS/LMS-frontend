@@ -2,12 +2,6 @@ import { assets } from '../../assets/assets'
 
 
 const Dashboard = () => {
-
-
-
-  
-
-
   return  (
     <div className='min-h-screen flex flex-col items-start justify-between gap-8 md:p-8 md:pb-0 p-4 pt-8 pb-0'>
       <div className='space-y-5'>

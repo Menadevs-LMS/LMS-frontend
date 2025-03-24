@@ -50,10 +50,19 @@ const AuthForm = ({ setToken }) => {
             }).then((response) => {
                 localStorage.setItem('accessToken', response.data.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                const userRole = response.data.data.user.role;
+                console.log("userRole AuthForm>>>>>>>>", userRole)
+                if (userRole === "instructor") {
+                    console.log("To educator authform")
 
-                setToken(response.data.data.accessToken); // Update the token state in App.js
-                console.log("Navigating to home...");
-                navigate('/');
+                    navigate("/educator");
+                } else {
+                    console.log("To Home authform")
+
+                    navigate("/");
+                }
+                setToken(response.data.data.accessToken);
+
             });
 
         } catch (err) {
@@ -68,7 +77,7 @@ const AuthForm = ({ setToken }) => {
         event?.preventDefault();
         const backendUrl = import.meta.env.VITE_BACKEND_URL;
         setError("");
-    
+
         try {
             const registerData = {
                 userName,
@@ -76,20 +85,20 @@ const AuthForm = ({ setToken }) => {
                 password,
                 role: "student"
             };
-    
+
             const response = await axios.post(`${backendUrl}/auth/register`, registerData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             console.log(response.data);
-    
+
             if (response.data.success) {
                 localStorage.setItem('accessToken', response.data.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
-    
-                setToken(response.data.data.accessToken); 
+
+                setToken(response.data.data.accessToken);
                 navigate('/');
             }
         } catch (err) {
@@ -97,7 +106,7 @@ const AuthForm = ({ setToken }) => {
             setError(err.response?.data?.message || "Registration failed. Please try again.");
         }
     };
-    
+
 
     return (
         <div className='auth-form'>

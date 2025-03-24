@@ -2,7 +2,7 @@ import { assets } from '../../assets/assets';
 import { Link } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 
-const Navbar = ({ bgColor }) => {
+const Navbar = ({ bgColor, userData }) => {
 
 
   return   (
@@ -11,7 +11,7 @@ const Navbar = ({ bgColor }) => {
         <img src={assets.logo} alt="Logo" className="w-28 lg:w-32" />
       </Link>
       <div className="flex items-center gap-5 text-gray-500 relative">
-        <p>Hi! </p>
+        <p>Hi! {userData?.userName} </p>
         <UserButton />
       </div>
     </div>
