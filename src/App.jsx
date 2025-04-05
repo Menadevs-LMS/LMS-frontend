@@ -18,6 +18,7 @@ import Footer from './components/student/Footer';
 import SignUp from './pages/signup/SignUp';
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
+import EditCourse from './pages/educator/EditCourse';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
@@ -86,6 +87,7 @@ const App = () => {
         <Route path='/educator' element={token && userRole === "instructor" ? <Educator userData={userData}/> : <Navigate to={token ? "/" : "/login"} />}>
           <Route path='/educator' element={<Dashboard />} />
           <Route path='add-course' element={<AddCourse />} />
+          <Route path='edit-course/:id' element={<EditCourse />} />
           <Route path='my-courses' element={<MyCourses />} />
           <Route path='student-enrolled' element={<StudentsEnrolled />} />
           <Route path='categories' element={<Catgories />} />
