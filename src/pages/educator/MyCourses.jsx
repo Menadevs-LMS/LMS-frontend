@@ -1,5 +1,25 @@
-
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 const MyCourses = () => {
+  const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
+
+  const getCourses = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/instructor/course/get`);
+      setCourses(res.data?.data || []);
+    } catch (err) {
+      console.error("Error fetching courses:", err);
+    }
+  };
+
+  useEffect(() => {
+    getCourses();
+  }, []);
+  const handleEdit = (id) => {
+    navigate(`/educator/edit-course/${id}`);
+  }
 
   return (
     <div className="h-screen flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0">
@@ -9,20 +29,50 @@ const MyCourses = () => {
           <table className="md:table-auto table-fixed w-full overflow-hidden">
             <thead className="text-gray-900 border-b border-gray-500/20 text-sm text-left">
               <tr>
-                <th className="px-4 py-3 font-semibold truncate">All Courses</th>
-                <th className="px-4 py-3 font-semibold truncate">Earnings</th>
-                <th className="px-4 py-3 font-semibold truncate">Students</th>
+                <th className="px-4 py-3 font-semibold truncate">Course Title</th>
                 <th className="px-4 py-3 font-semibold truncate">Published On</th>
+                <th className="px-4 py-3 font-semibold truncate">Students</th>
+                <th className="px-4 py-3 font-semibold truncate">Edit</th>
+                <th className="px-4 py-3 font-semibold truncate">Delete</th>
               </tr>
             </thead>
             <tbody className="text-sm text-gray-500">
-      
+              {courses.length > 0 ? (
+                courses.map((course) => (
+                  <tr key={course._id.$oid} className="border-b border-gray-300/30">
+                    <td className="px-4 py-3">{course.welcomeMessage || "Untitled Course"}</td>
+                    <td className="px-4 py-3">{new Date(course.date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">{course.students?.length || 0}</td>
+                    <td className="py-2 px-4">
+                      <button
+                        onClick={() => handleEdit(course._id)}
+                        className="bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                    <td className="py-2 px-4">
+                      <button
+                        className="bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600 transition"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="text-center py-4 text-gray-400">
+                    No courses available
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
     </div>
-  ) 
+  );
 };
 
 export default MyCourses;
