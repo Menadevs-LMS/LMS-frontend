@@ -5,12 +5,12 @@ import { assets } from '../assets/assets';
     <div className='flex flex-col justify-between flex-wrap mt-4'>
       <div className='flex md:flex-row flex-col items-center gap-3'>
         <p>Course Thumbnail</p>
-        <label htmlFor='thumbnailImage' className='flex items-center gap-3'>
+        <label htmlFor='image' className='flex items-center gap-3'>
           <img src={assets.file_upload_icon} alt="" className='p-3 bg-blue-500 rounded' />
           <input
             type="file"
-            id='thumbnailImage'
-            name="thumbnail"
+            id='image'
+            name="image"
             accept="image/*"
             onChange={handleFileChange}
             hidden

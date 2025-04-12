@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { assets } from '../../assets/assets';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import CourseQuizModal from '../../components/CourseQuizModal'
 import InputField from '../../components/InputField'
@@ -7,17 +6,22 @@ import ThumbnailUpload from '../../components/ThumbnailUpload'
 import LectureModal from '../../components/LectureModal'
 import QuizModal from '../../components/QuizModal'
 import LecturesList from '../../components/LecturesList'
+import { getAllCategories } from '../../store/categories'
+import { useDispatch, useSelector } from 'react-redux';
 const AddCourse = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const dispatch = useDispatch();
+  const categoriesState = useSelector((state) => state.categories.categories);
+  const [isCustomeCategory, setIsCustomeCategory] = useState(false);
 
   const [courseData, setCourseData] = useState({
     title: '',
     subtitle: '',
     welcomeMessage: '',
     description: '',
-    category: 'Beginner',
+    category: '',
     language: '',
-    thumbnail: null
+    image: null
   });
   const [courseQuizData, setCourseQuizData] = useState({
     title: '',
@@ -70,7 +74,23 @@ const AddCourse = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
+  const handleSelectCatgeory = (e) => {
+    const { name, value } = e.target;
+    if (value === "Other") {
+      setIsCustomeCategory(true);
+      setCourseData((prev) => ({
+        ...prev,
+        [name]: ""
+      }))
+    }
+    else {
+      setIsCustomeCategory(false);
+      setCourseData((prev) => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+  }
   const handleFileUpload = (e) => {
     const { name, files } = e.target;
 
@@ -87,7 +107,6 @@ const AddCourse = () => {
 
     if (name === 'pdfUrl') {
       const file = files[0];
-      // Validate PDF file
       if (file.type === 'application/pdf') {
         setLectureData(prev => ({ ...prev, pdfUrl: file }));
         setPdfPreview(URL.createObjectURL(file));
@@ -129,7 +148,7 @@ const AddCourse = () => {
     setCurrentCourseQuestion(prev => ({
       ...prev,
       questionType: type,
-      options: type === 'multiple-choice' ? 
+      options: type === 'multiple-choice' ?
         (prev.options.length > 0 ? prev.options : ['', '', '', '']) : [],
       correctAnswer: '',
       truthAnswers: [],
@@ -138,28 +157,28 @@ const AddCourse = () => {
   };
   const addCourseQuestionToQuiz = () => {
     const { questionText, questionType, options, correctAnswer } = currentCourseQuestion;
-  
+
     if (!questionText.trim()) {
       alert('Please enter question text');
       return;
     }
-  
+
     if (questionType === 'multiple-choice') {
-      const isValid = options.every(opt => opt.trim() !== '') && 
-                     options.includes(correctAnswer);
-      
+      const isValid = options.every(opt => opt.trim() !== '') &&
+        options.includes(correctAnswer);
+
       if (!isValid) {
         alert('Please fill all options and select a correct answer');
         return;
       }
     }
-  
+
     // Add question to quiz
     setCourseQuizData(prev => ({
       ...prev,
       questions: [...prev.questions, { ...currentCourseQuestion }]
     }));
-  
+
     // Reset question
     setCurrentCourseQuestion({
       questionText: '',
@@ -371,6 +390,11 @@ const AddCourse = () => {
       throw error;
     }
   };
+  const prepareUploadImage = async () => {
+    const image = courseData.image;
+    const imageResult = await uploadToS3(image);
+    return imageResult
+  }
   const prepareUploadData = async () => {
     const updatedLectures = [];
 
@@ -402,16 +426,19 @@ const AddCourse = () => {
 
     try {
       const processedLectures = await prepareUploadData();
+      const processedImage = await prepareUploadImage();
       console.log("processedLectures>>>>>>>", processedLectures)
       const payload = {
         quiz: courseQuizData,
         curriculum: processedLectures,
         date: new Date().toString(),
-        titel: courseData.title,
+        title: courseData.title,
         welcomeMessage: courseData.welcomeMessage,
         description: courseData.description,
         primaryLanguage: courseData.language,
-        subtitle: courseData.subtitle
+        subtitle: courseData.subtitle,
+        image: processedImage,
+        category:courseData.category
       };
       console.log("payload>>>>>>>>>>>>>", payload)
       const response = await axios.post(`${backendUrl}/instructor/course/add`, payload, {
@@ -426,6 +453,10 @@ const AddCourse = () => {
       console.error("Error uploading course:", error);
     }
   };
+  useEffect(() => {
+    dispatch(getAllCategories());
+  }, [dispatch])
+  console.log("courseData>>>",courseData)
   return (
     <div className='h-screen overflow-scroll flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0'>
       <form onSubmit={handleSubmit} className='flex flex-row justify-between max-w-[650px] gap-4 w-full text-gray-500'>
@@ -471,15 +502,26 @@ const AddCourse = () => {
             <select
               name="category"
               value={courseData.category}
-              onChange={handleCourseInputChange}
+              onChange={handleSelectCatgeory}
               className='outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500'
             >
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+               <option>Select...</option>
+
+              {categoriesState?.map((item, index) => {
+                return <option value={item.categoreName} key={index}>{item?.categoreName}</option>
+              })}
             </select>
           </div>
-
+          {isCustomeCategory &&
+            <InputField
+              label="Category Name"
+              name="category"
+              value={courseData.category}
+              onChange={handleCourseInputChange}
+              placeholder="Type here"
+              required
+            />
+          }
           <InputField
             label="Primary Language"
             name="language"
@@ -567,8 +609,6 @@ const AddCourse = () => {
         removeQuestionFromQuiz={removeQuestionFromQuiz}
         saveQuiz={addQuizToLecture}
         setQuizData={setQuizData}
-        
-      
       />
 
       <CourseQuizModal

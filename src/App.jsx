@@ -19,6 +19,7 @@ import SignUp from './pages/signup/SignUp';
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
 import EditCourse from './pages/educator/EditCourse';
+import Navbar from './components/student/Navbar';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
@@ -67,9 +68,10 @@ const App = () => {
       return "/";
     }
   };
-
+console.log("userRole>>>",userRole)
   return (
     <div className="text-default min-h-screen bg-white">
+      {userRole === "student" && < Navbar />}
       <Routes>
         <Route path="/" element={token ? (userRole === "instructor" ? <Navigate to="/educator" /> : <Home />) : <Navigate to="/login" />} />
 
@@ -84,7 +86,7 @@ const App = () => {
         <Route path="/player/:courseId" element={token ? <Player /> : <Navigate to="/login" />} />
         <Route path="/loading/:path" element={<Loading />} />
 
-        <Route path='/educator' element={token && userRole === "instructor" ? <Educator userData={userData}/> : <Navigate to={token ? "/" : "/login"} />}>
+        <Route path='/educator' element={token && userRole === "instructor" ? <Educator userData={userData} /> : <Navigate to={token ? "/" : "/login"} />}>
           <Route path='/educator' element={<Dashboard />} />
           <Route path='add-course' element={<AddCourse />} />
           <Route path='edit-course/:id' element={<EditCourse />} />

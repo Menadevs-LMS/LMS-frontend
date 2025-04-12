@@ -1,16 +1,28 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { deleteCourse } from "../../store/courses";
+import { useDispatch } from "react-redux";
+
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const getCourses = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/instructor/course/get`);
       setCourses(res.data?.data || []);
     } catch (err) {
       console.error("Error fetching courses:", err);
+    }
+  };
+
+  const deleteCourseById = async (id) => {
+    try {
+      await dispatch(deleteCourse(id)).unwrap(); // wait for it to complete
+      getCourses(); 
+    } catch (error) {
+      console.error("Error deleting course:", error);
     }
   };
 
@@ -53,6 +65,7 @@ const MyCourses = () => {
                     </td>
                     <td className="py-2 px-4">
                       <button
+                        onClick={() => deleteCourseById(course._id)}
                         className="bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600 transition"
                       >
                         Delete

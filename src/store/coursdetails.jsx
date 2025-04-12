@@ -8,7 +8,7 @@ export const getCourseDetails = createAsyncThunk("/course/deatils", async (id, {
         const response = await axios.get(`${backendUrl}/instructor/course/get/details/${id}`, {
             headers: { "Content-Type": 'application/json' }
         });
-        return response.data;
+        return response.data.data;
     } catch (error) {
         return rejeectWithValues(error.response?.data?.message || error.message)
     }
