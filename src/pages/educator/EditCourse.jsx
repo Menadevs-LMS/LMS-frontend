@@ -784,7 +784,7 @@ const EditCourse = () => {
           />
 
           <button type="submit" className='bg-black text-white w-max py-2.5 px-8 rounded my-4 '>
-            CREATE COURSE
+            UPDATE COURSE
           </button>
         </div>
 
@@ -794,6 +794,7 @@ const EditCourse = () => {
             openQuizModal={openQuizModal}
             handleRemoveLecture={handleRemoveLecture}
             handleEditLecture={handleEditLecture}
+            isEditCourse={true}
           />
 
           <div

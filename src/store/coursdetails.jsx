@@ -1,15 +1,20 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-
+import { setLoading } from "./auth";
+import { delayLoading } from './loading'
 const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-export const getCourseDetails = createAsyncThunk("/course/deatils", async (id, { rejeectWithValues }) => {
+export const getCourseDetails = createAsyncThunk("/course/deatils", async (id, { dispatch, rejeectWithValues }) => {
     try {
+        dispatch(setLoading(true))
         const response = await axios.get(`${backendUrl}/instructor/course/get/details/${id}`, {
             headers: { "Content-Type": 'application/json' }
         });
+        await delayLoading(Date.now())
+        dispatch(setLoading(false))
         return response.data.data;
     } catch (error) {
+        dispatch(setLoading(false))
         return rejeectWithValues(error.response?.data?.message || error.message)
     }
 })

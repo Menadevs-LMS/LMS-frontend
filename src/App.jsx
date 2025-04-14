@@ -20,9 +20,11 @@ import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
 import EditCourse from './pages/educator/EditCourse';
 import Navbar from './components/student/Navbar';
-
+import Loader from './components/Loader/Loader';
+import { useSelector } from 'react-redux';
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
+  const loadingStatus = useSelector((state) => state.auth.loading)
   const [userRole, setUserRole] = useState('');
   const [userData, setUserData] = useState({});
 
@@ -68,10 +70,10 @@ const App = () => {
       return "/";
     }
   };
-console.log("userRole>>>",userRole)
   return (
     <div className="text-default min-h-screen bg-white">
       {userRole === "student" && < Navbar />}
+      {loadingStatus && <Loader />}
       <Routes>
         <Route path="/" element={token ? (userRole === "instructor" ? <Navigate to="/educator" /> : <Home />) : <Navigate to="/login" />} />
 

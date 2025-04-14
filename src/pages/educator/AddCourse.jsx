@@ -8,9 +8,12 @@ import QuizModal from '../../components/QuizModal'
 import LecturesList from '../../components/LecturesList'
 import { getAllCategories } from '../../store/categories'
 import { useDispatch, useSelector } from 'react-redux';
+import { setLoading } from '../../store/auth';
+import { useNavigate } from 'react-router-dom';
 const AddCourse = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const dispatch = useDispatch();
+  const navigation = useNavigate();
   const categoriesState = useSelector((state) => state.categories.categories);
   const [isCustomeCategory, setIsCustomeCategory] = useState(false);
 
@@ -143,7 +146,31 @@ const AddCourse = () => {
       [name]: value
     }));
   };
+  // const handleEditLecture = (lectureId) => {
+  //   const lecture = lectures.find(l => l.id === lectureId);
+  //   if (lecture) {
+  //     setLectureData({
+  //       title: lecture.title || '',
+  //       videoUrl: lecture.videoUrl,
+  //       public_id: lecture.public_id || '',
+  //       freePreview: lecture.freePreview || false,
+  //       pdfUrl: lecture.pdfUrl,
+  //       quiz: lecture.quiz,
+  //       Duration: lecture.Duration || ''
+  //     });
 
+  //     if (lecture.videoUrl && typeof lecture.videoUrl === 'string') {
+  //       setVideoPreview(lecture.videoUrl);
+  //     }
+
+  //     if (lecture.pdfUrl && typeof lecture.pdfUrl === 'string') {
+  //       setPdfPreview(lecture.pdfUrl);
+  //     }
+
+  //     setCurrentLectureId(lectureId);
+  //     setIsModalOpen(true);
+  //   }
+  // };
   const handleCourseQuestionTypeChange = (type) => {
     setCurrentCourseQuestion(prev => ({
       ...prev,
@@ -361,19 +388,19 @@ const AddCourse = () => {
     setPdfPreview(null);
     setIsModalOpen(false);
   };
-  const validateCourse = () => {
-    if (!courseData.title) {
-      alert('Please enter a course title');
-      return false;
-    }
+  // const validateCourse = () => {
+  //   if (!courseData.title) {
+  //     alert('Please enter a course title');
+  //     return false;
+  //   }
 
-    if (lectures.length === 0) {
-      alert('Please add at least one lecture');
-      return false;
-    }
+  //   if (lectures.length === 0) {
+  //     alert('Please add at least one lecture');
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
   const openCourseQuizModal = () => {
     setIsCourseQuizModalOpen(true);
   };
@@ -423,7 +450,7 @@ const AddCourse = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    dispatch(setLoading(true));
     try {
       const processedLectures = await prepareUploadData();
       const processedImage = await prepareUploadImage();
@@ -438,7 +465,7 @@ const AddCourse = () => {
         primaryLanguage: courseData.language,
         subtitle: courseData.subtitle,
         image: processedImage,
-        category:courseData.category
+        category: courseData.category
       };
       console.log("payload>>>>>>>>>>>>>", payload)
       const response = await axios.post(`${backendUrl}/instructor/course/add`, payload, {
@@ -446,17 +473,18 @@ const AddCourse = () => {
           'Content-Type': 'application/json'
         }
       });
-
+      dispatch(setLoading(false));
       console.log("Course uploaded successfully:", response.data);
-
+      navigation("/educator/my-courses")
     } catch (error) {
+      dispatch(setLoading(false));
       console.error("Error uploading course:", error);
     }
   };
   useEffect(() => {
     dispatch(getAllCategories());
   }, [dispatch])
-  console.log("courseData>>>",courseData)
+  console.log("courseData>>>", courseData)
   return (
     <div className='h-screen overflow-scroll flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0'>
       <form onSubmit={handleSubmit} className='flex flex-row justify-between max-w-[650px] gap-4 w-full text-gray-500'>
@@ -505,7 +533,7 @@ const AddCourse = () => {
               onChange={handleSelectCatgeory}
               className='outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500'
             >
-               <option>Select...</option>
+              <option>Select...</option>
 
               {categoriesState?.map((item, index) => {
                 return <option value={item.categoreName} key={index}>{item?.categoreName}</option>
@@ -546,7 +574,7 @@ const AddCourse = () => {
             lectures={lectures}
             openQuizModal={openQuizModal}
             handleRemoveLecture={handleRemoveLecture}
-
+            isEditCourse={false}
           />
 
           <div
@@ -596,6 +624,9 @@ const AddCourse = () => {
         videoPreview={videoPreview}
         pdfPreview={pdfPreview}
         handleAddLecture={handleAddLecture}
+        handleRemovePdf={() => setPdfPreview(null)}
+        handleRemoveVideo={() => setVideoPreview(null)}
+
       />
 
       <QuizModal

@@ -3,25 +3,37 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteCourse } from "../../store/courses";
 import { useDispatch } from "react-redux";
-
+import { setLoading } from "../../store/auth";
+import { delayLoading } from "../../store/loading";
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const getCourses = async () => {
     try {
+      dispatch(setLoading(true))
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/instructor/course/get`);
       setCourses(res.data?.data || []);
+      await delayLoading(Date.now());
+      dispatch(setLoading(false))
+
     } catch (err) {
       console.error("Error fetching courses:", err);
+      dispatch(setLoading(false))
+
     }
   };
 
   const deleteCourseById = async (id) => {
     try {
+      dispatch(setLoading(true))
+
       await dispatch(deleteCourse(id)).unwrap(); // wait for it to complete
-      getCourses(); 
+      getCourses();
+      await delayLoading(Date.now());
+      dispatch(setLoading(false))
     } catch (error) {
+      dispatch(setLoading(false))
       console.error("Error deleting course:", error);
     }
   };

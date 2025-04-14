@@ -1,23 +1,29 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-
+import { setLoading } from "./auth";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-export const deleteCourse = createAsyncThunk("/course/delete", async (id, { rejectWithValue }) => {
+export const deleteCourse = createAsyncThunk("/course/delete", async (id, { dispatch, rejectWithValue }) => {
     try {
+        dispatch(setLoading(true))
         const response = await axios.post(`${backendUrl}/instructor/course/delete/${id}`);
-        return { id, ...response.data }; 
+        dispatch(setLoading(false))
+        return { id, ...response.data };
     } catch (error) {
+        dispatch(setLoading(false))
         console.error("Delete course error:", error);
         return rejectWithValue(error.response?.data?.message || error.message);
     }
 });
 
-export const editCourse = createAsyncThunk("/course/edit", async ({ id, data }, { rejectWithValue }) => {
+export const editCourse = createAsyncThunk("/course/edit", async ({ id, data }, { dispatch, rejectWithValue }) => {
     try {
+        dispatch(setLoading(true))
         const response = await axios.put(`${backendUrl}/instructor/course/update/${id}`, data);
+        dispatch(setLoading(false))
         return response.data;
     } catch (error) {
+        dispatch(setLoading(false))
         console.error("Edit course error:", error);
         return rejectWithValue(error.response?.data?.message || error.message);
     }
