@@ -57,7 +57,7 @@ function SignUp() {
       <div className=" border-t-8 rounded-sm border-indigo-600 bg-white p-12 shadow-2xl w-96">
         <h1 className="font-bold text-center block text-2xl">Sign Up</h1>
         <form onSubmit={handleLogin}>
-          <Input handleChange={setName} type="name" name="name" label="User Name" placeholder="Name" autofocus={true} />
+          <Input handleChange={setName} type="name" name="name" label="User Name" placeholder="Nameeeeeeeeee" autofocus={true} />
           <Input handleChange={setEmail} type="email" id="email" name="email" label="Email Address" placeholder="me@example.com" autofocus={true} />
           <Input handleChange={setPassword} type="password" id="password" name="password" label="Password" placeholder="••••••••••" />
           {/* <Input type="password" id="password" name="password" label="Confirm Password" placeholder="••••••••••" /> */}

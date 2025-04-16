@@ -16,11 +16,13 @@ import MyEnrollments from './pages/student/MyEnrollments';
 import Loading from './components/student/Loading';
 import Footer from './components/student/Footer';
 
-// import Admin from './pages/admin/Admin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AddUser from './pages/admin/AddUser'
+import CoursesController from './pages/admin/CoursesController';
 
 
-// import Login from './pages/login/Login';
-import SignUp from './pages/signup/SignUp';
+
+
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
 
@@ -42,8 +44,14 @@ const App = () => {
       <Routes>
         <Route path="/" element={token ? <Home /> : <Navigate to="/login" />} />
         <Route path="/login" element={!token ? <AuthForm setToken={setToken} /> : <Navigate to="/" />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/signup" element={<AuthForm />} />
+
+        <Route path="/admin" element={<AdminDashboard />}>
+          <Route path="add-user" element={<AddUser />} />
+          <Route path="courses-controller" element={<CoursesController />} />
+        </Route>
+        
+        {/* <Route path="/courses-controller" element={<CoursesController />} /> */}
         <Route path="/coursedetails" element={<CourseDetails />} />
         <Route path="/course-list" element={<CoursesList />} />
         <Route path="/course-list/:input" element={<CoursesList />} />
