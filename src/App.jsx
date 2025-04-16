@@ -17,7 +17,7 @@ import Loading from './components/student/Loading';
 import Footer from './components/student/Footer';
 
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AddUser from './pages/admin/AddUser'
+import UsersController from './pages/admin/UsersController'
 import CoursesController from './pages/admin/CoursesController';
 
 
@@ -47,7 +47,7 @@ const App = () => {
         <Route path="/signup" element={<AuthForm />} />
 
         <Route path="/admin" element={<AdminDashboard />}>
-          <Route path="add-user" element={<AddUser />} />
+          <Route path="users-controller" element={<UsersController />} />
           <Route path="courses-controller" element={<CoursesController />} />
         </Route>
         

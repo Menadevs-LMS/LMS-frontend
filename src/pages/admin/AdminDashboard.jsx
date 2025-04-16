@@ -6,7 +6,7 @@ const AdminLayout = () => {
   const menuItems = [
     {
       name: 'Users Controller',
-      path: '/admin/add-user',
+      path: '/admin/users-controller',
       icon: assets.user_icon
     },
     {
