@@ -1,21 +1,30 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { deleteCourse } from "../../store/courses";
+import { useDispatch, useSelector } from "react-redux";
+import { setLoading } from "../../store/auth";
+import { delayLoading } from "../../store/loading";
+import { getAllCourses } from "../../store/courses";
 const MyCourses = () => {
-  const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
-
-  const getCourses = async () => {
+  const dispatch = useDispatch();
+  const courses = useSelector((state) => state.courses.courses);
+  const deleteCourseById = async (id) => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/instructor/course/get`);
-      setCourses(res.data?.data || []);
-    } catch (err) {
-      console.error("Error fetching courses:", err);
+      dispatch(setLoading(true))
+
+      await dispatch(deleteCourse(id)).unwrap(); // wait for it to complete
+      dispatch(getAllCourses());
+      await delayLoading(Date.now());
+      dispatch(setLoading(false))
+    } catch (error) {
+      dispatch(setLoading(false))
+      console.error("Error deleting course:", error);
     }
   };
 
   useEffect(() => {
-    getCourses();
+    dispatch(getAllCourses());
   }, []);
   const handleEdit = (id) => {
     navigate(`/educator/edit-course/${id}`);
@@ -53,6 +62,7 @@ const MyCourses = () => {
                     </td>
                     <td className="py-2 px-4">
                       <button
+                        onClick={() => deleteCourseById(course._id)}
                         className="bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600 transition"
                       >
                         Delete
