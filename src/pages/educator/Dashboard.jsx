@@ -1,30 +1,43 @@
 import { assets } from '../../assets/assets'
+import { getLastEnroll, getAllCourses, getEnrollCountCoures } from '../../store/courses'
+import { useDispatch, useSelector } from 'react-redux'
+import { useEffect } from 'react'
 
 
 const Dashboard = () => {
-  return  (
+  const dispatch = useDispatch();
+  const stateDashbaord = useSelector((state) => state.courses);
+
+  useEffect(() => {
+    dispatch(getLastEnroll())
+    dispatch(getAllCourses());
+    dispatch(getEnrollCountCoures())
+  }, [dispatch]);
+
+
+  return (
     <div className='min-h-screen flex flex-col items-start justify-between gap-8 md:p-8 md:pb-0 p-4 pt-8 pb-0'>
       <div className='space-y-5'>
         <div className='flex flex-wrap gap-5 items-center'>
+        <div className='flex items-center gap-3 shadow-card border border-blue-500 p-4 w-56 rounded-md'>
+            <img src={assets.patients_icon} alt="patients_icon" />
+            <div>
+              <p className='text-2xl font-medium text-gray-600'>{stateDashbaord.numberOfStudent}</p>
+              <p className='text-base text-gray-500'>Total Students</p>
+            </div>
+          </div>
           <div className='flex items-center gap-3 shadow-card border border-blue-500 p-4 w-56 rounded-md'>
             <img src={assets.patients_icon} alt="patients_icon" />
             <div>
-              <p className='text-2xl font-medium text-gray-600'>3</p>
+              <p className='text-2xl font-medium text-gray-600'>{stateDashbaord.enrollCount}</p>
               <p className='text-base text-gray-500'>Total Enrolments</p>
             </div>
           </div>
           <div className='flex items-center gap-3 shadow-card border border-blue-500 p-4 w-56 rounded-md'>
             <img src={assets.appointments_icon} alt="patients_icon" />
             <div>
-              <p className='text-2xl font-medium text-gray-600'></p>
+              <p className='text-2xl font-medium text-gray-600'>{stateDashbaord?.courses?.length}</p>
               <p className='text-base text-gray-500'>Total Courses</p>
-            </div>
-          </div>
-          <div className='flex items-center gap-3 shadow-card border border-blue-500 p-4 w-56 rounded-md'>
-            <img src={assets.earning_icon} alt="patients_icon" />
-            <div>
-              <p className='text-2xl font-medium text-gray-600'></p>
-              <p className='text-base text-gray-500'>Total Earnings</p>
             </div>
           </div>
         </div>
@@ -40,27 +53,24 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-500">
-               
-                  <tr  className="border-b border-gray-500/20">
-                    <td className="px-4 py-3 text-center hidden sm:table-cell"></td>
-                    <td className="md:px-4 px-2 py-3 flex items-center space-x-3">
-                      <img
-                        src=""
-                        alt="Profile"
-                        className="w-9 h-9 rounded-full"
-                      />
-                      <span className="truncate"></span>
-                    </td>
-                    <td className="px-4 py-3 truncate">title</td>
-                  </tr>
-          
+                {stateDashbaord?.lastCourses?.flatMap((course) =>
+                  course.recentStudents.map((student, studentIdx) => (
+                    <tr key={`${course._id}-${studentIdx}`} className="border-b border-gray-500/20">
+                      <td className="px-4 py-3 text-center hidden sm:table-cell">{studentIdx + 1}</td>
+                      <td className="md:px-4 px-2 py-3 flex items-center space-x-3">
+                        <span className="truncate">{student.studentName}</span>
+                      </td>
+                      <td className="px-4 py-3 truncate">{course.title}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
-  ) 
+  )
 }
 
 export default Dashboard

@@ -1,35 +1,20 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteCourse } from "../../store/courses";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setLoading } from "../../store/auth";
 import { delayLoading } from "../../store/loading";
+import { getAllCourses } from "../../store/courses";
 const MyCourses = () => {
-  const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const getCourses = async () => {
-    try {
-      dispatch(setLoading(true))
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/instructor/course/get`);
-      setCourses(res.data?.data || []);
-      await delayLoading(Date.now());
-      dispatch(setLoading(false))
-
-    } catch (err) {
-      console.error("Error fetching courses:", err);
-      dispatch(setLoading(false))
-
-    }
-  };
-
+  const courses = useSelector((state) => state.courses.courses);
   const deleteCourseById = async (id) => {
     try {
       dispatch(setLoading(true))
 
       await dispatch(deleteCourse(id)).unwrap(); // wait for it to complete
-      getCourses();
+      dispatch(getAllCourses());
       await delayLoading(Date.now());
       dispatch(setLoading(false))
     } catch (error) {
@@ -39,7 +24,7 @@ const MyCourses = () => {
   };
 
   useEffect(() => {
-    getCourses();
+    dispatch(getAllCourses());
   }, []);
   const handleEdit = (id) => {
     navigate(`/educator/edit-course/${id}`);
