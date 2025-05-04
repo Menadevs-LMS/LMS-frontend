@@ -11,18 +11,15 @@ const Categories = () => {
         dispatch(getAllCategories());
     }, [dispatch]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!categoryName.trim()) return;
-
-        dispatch(addCategory(categoryName));
-        dispatch(getAllCategories());
+        await dispatch(addCategory(categoryName)).unwrap();
         setCategoryName("");
     };
 
     const handleDelete = (categoryId) => {
         dispatch(deleteCategory(categoryId));
-        dispatch(getAllCategories());
     }
         return (
             <div className="flex flex-col items-start justify-between md:p-8 p-4 pt-8">

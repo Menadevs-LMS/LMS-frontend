@@ -6,37 +6,44 @@ import { useClerk, UserButton, } from '@clerk/clerk-react';
 
 const Navbar = () => {
 
- 
+
 
   const { openSignIn } = useClerk()
 
   return (
     <div className={`flex items-center justify-between px-4 sm:px-10 md:px-14 lg:px-36 border-b border-gray-500 py-4 'bg-cyan-100/70'}`}>
-      <img  src={assets.logo} alt="Logo" className="w-28 lg:w-32 cursor-pointer" />
+      <img src={assets.logo} alt="Logo" className="w-28 lg:w-32 cursor-pointer" />
       <div className="md:flex hidden items-center gap-5 text-gray-500">
         <div className="flex items-center gap-5">
-          
-               <Link to='/my-enrollments' >My Enrollments</Link>
-          
+
+          <Link to='/my-enrollments' >My Enrollments</Link>
+
         </div>
+
        
            <UserButton />
            <button onClick={() => openSignIn()} className="bg-green-600 text-white px-5 py-2 rounded-full">
             Create Account
           </button>
+
+//         <UserButton />
+//         <button onClick={() => openSignIn()} className="bg-blue-600 text-white px-5 py-2 rounded-full">
+//           Create Account
+//         </button>
+// >>>>>>> main
       </div>
       {/* For Phone Screens */}
       <div className='md:hidden flex items-center gap-2 sm:gap-5 text-gray-500'>
         <div className="flex items-center gap-1 sm:gap-2 max-sm:text-xs">
-          
-             <Link to='/my-enrollments' >My Enrollments</Link>
-          
+
+          <Link to='/my-enrollments' >My Enrollments</Link>
+
         </div>
-        
-          <UserButton />
-          <button onClick={() => openSignIn()}>
-            <img src={assets.user_icon} alt="" />
-          </button>
+
+        <UserButton />
+        <button onClick={() => openSignIn()}>
+          <img src={assets.user_icon} alt="" />
+        </button>
       </div>
     </div>
   );

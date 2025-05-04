@@ -3,6 +3,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root {
+  --color-primary: rgb(61, 229, 52);
+  --color-secondary: rgb(238, 255, 0);
+  --color-secondary-transparent: rgba(238, 255, 0, 0.2);
+  --color-white: rgb(255, 255, 255);
+  --color-gray-light: rgb(204, 204, 204);
+  --color-gray: rgb(135, 136, 137);
+  --color-dark-light: rgb(77, 77, 77);
+  --color-dark: rgb(31, 31, 31);
+  --color-darker: rgb(24, 24, 24);
+  --color-darkest: rgb(21, 21, 21);
+  --color-bg-primary: var(--color-darkest);
+  --color-bg-secondary: var(--color-darker);
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: var(--color-gray-light);
+  --color-border: var(--color-dark-light);
+  --color-accent: var(--color-primary);
+  --color-highlight: var(--color-secondary);
+  --color-highlight-bg: var(--color-secondary-transparent);
+}
+
+
+
+.light {
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: var(--color-gray-light);
+  --color-text-primary: var(--color-darkest);
+  --color-text-secondary: var(--color-dark);
+}
 
 *{
   font-family: Outfit;

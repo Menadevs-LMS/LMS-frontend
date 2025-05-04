@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import CourseQuizModal from '../../components/CourseQuizModal'
 import InputField from '../../components/InputField'
@@ -6,23 +6,27 @@ import ThumbnailUpload from '../../components/ThumbnailUpload'
 import LectureModal from '../../components/LectureModal'
 import QuizModal from '../../components/QuizModal'
 import LecturesList from '../../components/LecturesList'
+import { getCourseDetails } from '../../store/coursdetails'
+import { useSelector, useDispatch } from 'react-redux';
 import { getAllCategories } from '../../store/categories'
-import { useDispatch, useSelector } from 'react-redux';
-import { setLoading } from '../../store/auth';
-import { useNavigate } from 'react-router-dom';
-const AddCourse = () => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL
-  const dispatch = useDispatch();
-  const navigation = useNavigate();
-  const categoriesState = useSelector((state) => state.categories.categories);
-  const [isCustomeCategory, setIsCustomeCategory] = useState(false);
 
+import { useParams } from 'react-router-dom';
+const EditCourse = () => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const courseDetails = useSelector((state) => state.coursedetails.courseDetails);
+  const dispatch = useDispatch();
+
+  const { id } = useParams();
+  const categoriesState = useSelector((state) => state.categories.categories);
+
+
+  console.log("courseDetails>>>", courseDetails)
   const [courseData, setCourseData] = useState({
     title: '',
     subtitle: '',
     welcomeMessage: '',
     description: '',
-    category: '',
+    category: 'Beginner',
     language: '',
     image: null
   });
@@ -77,23 +81,29 @@ const AddCourse = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-  const handleSelectCatgeory = (e) => {
-    const { name, value } = e.target;
-    if (value === "Other") {
-      setIsCustomeCategory(true);
-      setCourseData((prev) => ({
-        ...prev,
-        [name]: ""
-      }))
+
+  const deleteFromS3 = async (fileUrl) => {
+    try {
+      if (!fileUrl || !fileUrl.includes('amazonaws.com')) {
+        return;
+      }
+
+      const url = new URL(fileUrl);
+      const pathParts = url.pathname.split('/');
+
+      const key = pathParts.slice(1).join('/').replace("uploads/", "");
+
+      console.log("Deleting file with key:", key);
+
+      const response = await axios.delete(`${backendUrl}/media/delete/${key}`);
+
+      console.log("File deleted from S3:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting file from S3:", error);
+      throw error;
     }
-    else {
-      setIsCustomeCategory(false);
-      setCourseData((prev) => ({
-        ...prev,
-        [name]: value
-      }))
-    }
-  }
+  };
   const handleFileUpload = (e) => {
     const { name, files } = e.target;
 
@@ -117,6 +127,158 @@ const AddCourse = () => {
         alert('Please upload a valid PDF file');
       }
     }
+  };
+  const handleEditLecture = (lectureId) => {
+    const lecture = lectures.find(l => l.id === lectureId);
+    if (lecture) {
+      setLectureData({
+        title: lecture.title || '',
+        videoUrl: lecture.videoUrl,
+        public_id: lecture.public_id || '',
+        freePreview: lecture.freePreview || false,
+        pdfUrl: lecture.pdfUrl,
+        quiz: lecture.quiz,
+        Duration: lecture.Duration || ''
+      });
+
+      if (lecture.videoUrl && typeof lecture.videoUrl === 'string') {
+        setVideoPreview(lecture.videoUrl);
+      }
+
+      if (lecture.pdfUrl && typeof lecture.pdfUrl === 'string') {
+        setPdfPreview(lecture.pdfUrl);
+      }
+
+      setCurrentLectureId(lectureId);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleRemoveVideo = async () => {
+    try {
+      if (lectureData.videoUrl && typeof lectureData.videoUrl === 'string' &&
+        lectureData.videoUrl.includes('amazonaws.com')) {
+        await deleteFromS3(lectureData.videoUrl);
+      }
+
+      setLectureData(prev => ({ ...prev, videoUrl: null }));
+      setVideoPreview(null);
+    } catch (error) {
+      console.error("Error removing video:", error);
+      alert("Failed to remove video. Please try again.");
+    }
+  };
+
+  const handleRemovePdf = async () => {
+    try {
+      if (lectureData.pdfUrl && typeof lectureData.pdfUrl === 'string' &&
+        lectureData.pdfUrl.includes('amazonaws.com')) {
+        await deleteFromS3(lectureData.pdfUrl);
+      }
+
+      setLectureData(prev => ({ ...prev, pdfUrl: null }));
+      setPdfPreview(null);
+    } catch (error) {
+      console.error("Error removing PDF:", error);
+      alert("Failed to remove PDF. Please try again.");
+    }
+  };
+
+  const handleAddLecture = async () => {
+    if (!validateLecture()) return;
+
+    try {
+      if (currentLectureId) {
+        const currentLecture = lectures.find(l => l.id === currentLectureId);
+
+        if (currentLecture.videoUrl !== lectureData.videoUrl &&
+          currentLecture.videoUrl &&
+          typeof currentLecture.videoUrl === 'string' &&
+          currentLecture.videoUrl.includes('amazonaws.com')) {
+          await deleteFromS3(currentLecture.videoUrl);
+        }
+
+        if (currentLecture.pdfUrl !== lectureData.pdfUrl &&
+          currentLecture.pdfUrl &&
+          typeof currentLecture.pdfUrl === 'string' &&
+          currentLecture.pdfUrl.includes('amazonaws.com')) {
+          await deleteFromS3(currentLecture.pdfUrl);
+        }
+
+        const updatedLectures = lectures.map(lecture =>
+          lecture.id === currentLectureId
+            ? {
+              ...lecture,
+              title: lectureData.title,
+              videoUrl: lectureData.videoUrl,
+              public_id: lectureData.public_id,
+              freePreview: lectureData.freePreview,
+              pdfUrl: lectureData.pdfUrl,
+              quiz: lectureData.quiz,
+              Duration: lectureData.Duration
+            }
+            : lecture
+        );
+
+        setLectures(updatedLectures);
+        setCurrentLectureId(null);
+      } else {
+        const newLecture = {
+          title: lectureData.title,
+          videoUrl: lectureData.videoUrl,
+          public_id: '',
+          freePreview: lectureData.freePreview,
+          pdfUrl: lectureData.pdfUrl,
+          quiz: lectureData.quiz,
+          Duration: lectureData.Duration,
+          id: Date.now()
+        };
+
+        setLectures(prev => [...prev, newLecture]);
+      }
+
+      setLectureData({
+        title: '',
+        videoUrl: null,
+        public_id: '',
+        freePreview: false,
+        pdfUrl: null,
+        quiz: null,
+        Duration: ''
+      });
+      setVideoPreview(null);
+      setPdfPreview(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating lecture:", error);
+      alert("Failed to update lecture. Please try again.");
+    }
+  };
+
+  const validateLecture = () => {
+    const { title, Duration, videoUrl, pdfUrl } = lectureData;
+
+    if (!title) {
+      alert('Please enter a lecture title');
+      return false;
+    }
+
+    if (!Duration) {
+      alert('Please enter a duration');
+      return false;
+    }
+
+    if (!videoUrl) {
+      alert('Please upload a video');
+      return false;
+    }
+
+    if (!pdfUrl) {
+      alert('Please upload a PDF');
+      return false;
+    }
+
+    return true;
   };
 
   const handleCourseQuestionInputChange = (e, index = null) => {
@@ -146,31 +308,7 @@ const AddCourse = () => {
       [name]: value
     }));
   };
-  // const handleEditLecture = (lectureId) => {
-  //   const lecture = lectures.find(l => l.id === lectureId);
-  //   if (lecture) {
-  //     setLectureData({
-  //       title: lecture.title || '',
-  //       videoUrl: lecture.videoUrl,
-  //       public_id: lecture.public_id || '',
-  //       freePreview: lecture.freePreview || false,
-  //       pdfUrl: lecture.pdfUrl,
-  //       quiz: lecture.quiz,
-  //       Duration: lecture.Duration || ''
-  //     });
 
-  //     if (lecture.videoUrl && typeof lecture.videoUrl === 'string') {
-  //       setVideoPreview(lecture.videoUrl);
-  //     }
-
-  //     if (lecture.pdfUrl && typeof lecture.pdfUrl === 'string') {
-  //       setPdfPreview(lecture.pdfUrl);
-  //     }
-
-  //     setCurrentLectureId(lectureId);
-  //     setIsModalOpen(true);
-  //   }
-  // };
   const handleCourseQuestionTypeChange = (type) => {
     setCurrentCourseQuestion(prev => ({
       ...prev,
@@ -200,13 +338,11 @@ const AddCourse = () => {
       }
     }
 
-    // Add question to quiz
     setCourseQuizData(prev => ({
       ...prev,
       questions: [...prev.questions, { ...currentCourseQuestion }]
     }));
 
-    // Reset question
     setCurrentCourseQuestion({
       questionText: '',
       questionType: 'multiple-choice',
@@ -216,7 +352,6 @@ const AddCourse = () => {
       paragraphAnswer: ''
     });
   };
-  // Quiz Management Methods
   const handleQuestionTypeChange = (e) => {
     const type = e.target.value;
     setCurrentQuestion(prev => ({
@@ -313,34 +448,53 @@ const AddCourse = () => {
 
     setIsQuizModalOpen(true);
   };
-  const handleRemoveLecture = (id) => {
-    setLectures(prev => prev.filter(lecture => lecture.id !== id));
+  const handleRemoveLecture = async (id) => {
+    try {
+      const lecture = lectures.find(l => l.id === id);
+
+      if (lecture) {
+        if (lecture.videoUrl && typeof lecture.videoUrl === 'string' &&
+          lecture.videoUrl.includes('amazonaws.com')) {
+          await deleteFromS3(lecture.videoUrl);
+        }
+
+        if (lecture.pdfUrl && typeof lecture.pdfUrl === 'string' &&
+          lecture.pdfUrl.includes('amazonaws.com')) {
+          await deleteFromS3(lecture.pdfUrl);
+        }
+      }
+
+      setLectures(prev => prev.filter(lecture => lecture.id !== id));
+    } catch (error) {
+      console.error("Error removing lecture:", error);
+      alert("Failed to completely remove lecture. Please try again.");
+    }
   };
-  const validateLecture = () => {
-    const { title, Duration, videoUrl, pdfUrl } = lectureData;
+  // const validateLecture = () => {
+  //   const { title, Duration, videoUrl, pdfUrl } = lectureData;
 
-    if (!title) {
-      alert('Please enter a lecture title');
-      return false;
-    }
+  //   if (!title) {
+  //     alert('Please enter a lecture title');
+  //     return false;
+  //   }
 
-    if (!Duration) {
-      alert('Please enter a duration');
-      return false;
-    }
+  //   if (!Duration) {
+  //     alert('Please enter a duration');
+  //     return false;
+  //   }
 
-    if (!videoUrl) {
-      alert('Please upload a video');
-      return false;
-    }
+  //   if (!videoUrl) {
+  //     alert('Please upload a video');
+  //     return false;
+  //   }
 
-    if (!pdfUrl) {
-      alert('Please upload a PDF');
-      return false;
-    }
+  //   if (!pdfUrl) {
+  //     alert('Please upload a PDF');
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
   const handleCourseInputChange = (e) => {
     const { name, value, type, files } = e.target;
 
@@ -359,61 +513,74 @@ const AddCourse = () => {
       }));
     }
   };
-  const handleAddLecture = () => {
-    if (!validateLecture()) return;
+  // const handleAddLecture = () => {
+  //   if (!validateLecture()) return;
 
-    const newLecture = {
-      title: lectureData.title,
-      videoUrl: lectureData.videoUrl,
-      public_id: '',
-      freePreview: lectureData.freePreview,
-      pdfUrl: lectureData.pdfUrl,
-      quiz: lectureData.quiz,
-      Duration: lectureData.Duration,
-      id: Date.now()
-    };
+  //   const newLecture = {
+  //     title: lectureData.title,
+  //     videoUrl: lectureData.videoUrl,
+  //     public_id: '',
+  //     freePreview: lectureData.freePreview,
+  //     pdfUrl: lectureData.pdfUrl,
+  //     quiz: lectureData.quiz,
+  //     Duration: lectureData.Duration,
+  //     id: Date.now()
+  //   };
 
-    setLectures(prev => [...prev, newLecture]);
+  //   setLectures(prev => [...prev, newLecture]);
 
-    setLectureData({
-      title: '',
-      videoUrl: null,
-      public_id: '',
-      freePreview: false,
-      pdfUrl: null,
-      quiz: null,
-      Duration: ''
-    });
-    setVideoPreview(null);
-    setPdfPreview(null);
-    setIsModalOpen(false);
-  };
-  // const validateCourse = () => {
-  //   if (!courseData.title) {
-  //     alert('Please enter a course title');
-  //     return false;
-  //   }
-
-  //   if (lectures.length === 0) {
-  //     alert('Please add at least one lecture');
-  //     return false;
-  //   }
-
-  //   return true;
+  //   setLectureData({
+  //     title: '',
+  //     videoUrl: null,
+  //     public_id: '',
+  //     freePreview: false,
+  //     pdfUrl: null,
+  //     quiz: null,
+  //     Duration: ''
+  //   });
+  //   setVideoPreview(null);
+  //   setPdfPreview(null);
+  //   setIsModalOpen(false);
   // };
+  const validateCourse = () => {
+    if (!courseData.title) {
+      alert('Please enter a course title');
+      return false;
+    }
+
+    if (lectures.length === 0) {
+      alert('Please add at least one lecture');
+      return false;
+    }
+
+    return true;
+  };
   const openCourseQuizModal = () => {
     setIsCourseQuizModalOpen(true);
   };
 
   const uploadToS3 = async (file) => {
     try {
+      if (!file) {
+        console.log("No file provided for upload");
+        return null;
+      }
+
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post(`${backendUrl}/media/upload`, formData);
-      console.log("Response s3>>>>", response.data);
+
+      console.log("Uploading file:", file.name, "Size:", file.size);
+
+      const response = await axios.post(`${backendUrl}/media/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      console.log("S3 upload response:", response.data);
       return response.data?.data?.Location;
     } catch (error) {
-      console.log("Error S3", error);
+      console.error("Error uploading to S3:", error.response?.data || error.message);
       throw error;
     }
   };
@@ -429,62 +596,123 @@ const AddCourse = () => {
       let pdfUrl = item.pdfUrl;
       let videoUrl = item.videoUrl;
 
-      if (item.pdfUrl instanceof File) {
-        const pdfResult = await uploadToS3(item.pdfUrl);
-        pdfUrl = pdfResult;
-      }
+      try {
+        // Only upload if it's a File object (new file)
+        if (item.pdfUrl instanceof File) {
+          console.log(`Uploading PDF for lecture: ${item.title}`);
+          const pdfResult = await uploadToS3(item.pdfUrl);
+          pdfUrl = pdfResult;
+        }
 
-      if (item.videoUrl instanceof File) {
-        const videoResult = await uploadToS3(item.videoUrl);
-        videoUrl = videoResult;
-      }
+        if (item.videoUrl instanceof File) {
+          console.log(`Uploading video for lecture: ${item.title}`);
+          const videoResult = await uploadToS3(item.videoUrl);
+          videoUrl = videoResult;
+        }
 
-      updatedLectures.push({
-        ...item,
-        pdfUrl,
-        videoUrl
-      });
+        updatedLectures.push({
+          ...item,
+          pdfUrl,
+          videoUrl,
+          id: item._id || item.id
+        });
+
+      } catch (error) {
+        console.error(`Error processing lecture ${item.title}:`, error);
+        throw new Error(`Failed to process lecture "${item.title}": ${error.message}`);
+      }
     }
 
     return updatedLectures;
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(setLoading(true));
+
+    if (!validateCourse()) return;
+
     try {
+      console.log("Starting course update process...");
+
       const processedLectures = await prepareUploadData();
+      console.log("Processed lectures:", processedLectures);
       const processedImage = await prepareUploadImage();
-      console.log("processedLectures>>>>>>>", processedLectures)
+
       const payload = {
         quiz: courseQuizData,
-        curriculum: processedLectures,
+        curriculum: processedLectures.map(lecture => ({
+          title: lecture.title,
+          videoUrl: lecture.videoUrl,
+          pdfUrl: lecture.pdfUrl,
+          freePreview: lecture.freePreview,
+          Duration: lecture.Duration,
+          quiz: lecture.quiz,
+          _id: lecture._id || undefined
+        })),
         date: new Date().toString(),
         title: courseData.title,
         welcomeMessage: courseData.welcomeMessage,
         description: courseData.description,
         primaryLanguage: courseData.language,
         subtitle: courseData.subtitle,
+        category:courseData.category,
         image: processedImage,
-        category: courseData.category
       };
-      console.log("payload>>>>>>>>>>>>>", payload)
-      const response = await axios.post(`${backendUrl}/instructor/course/add`, payload, {
+
+      console.log("Sending payload to update course:", payload);
+
+      const response = await axios.put(`${backendUrl}/instructor/course/update/${id}`, payload, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      dispatch(setLoading(false));
-      console.log("Course uploaded successfully:", response.data);
-      navigation("/educator/my-courses")
+
+      console.log("Course updated successfully:", response.data);
+      alert("Course updated successfully!");
+
     } catch (error) {
-      dispatch(setLoading(false));
-      console.error("Error uploading course:", error);
+      console.error("Error updating course:", error.response?.data || error);
+      alert(`Failed to update course: ${error.response?.data?.message || error.message}`);
     }
   };
+
   useEffect(() => {
-    dispatch(getAllCategories());
-  }, [dispatch])
-  console.log("courseData>>>", courseData)
+    if (id) {
+      dispatch(getCourseDetails(id));
+      dispatch(getAllCategories());
+    }
+  }, [id, dispatch]);
+  useEffect(() => {
+    if (courseDetails) {
+      setCourseData({
+        title: courseDetails.title || '',
+        subtitle: courseDetails.subtitle || '',
+        welcomeMessage: courseDetails.welcomeMessage || '',
+        description: courseDetails.description || '',
+        category: courseDetails.category || 'Beginner',
+        language: courseDetails.primaryLanguage || '',
+        image: courseDetails.image
+      });
+      setThumbnailPreview(courseDetails.image)
+
+      if (courseDetails.quiz) {
+        setCourseQuizData({
+          title: courseDetails.quiz.title || '',
+          questions: courseDetails.quiz.questions || []
+        });
+      }
+
+      if (courseDetails.curriculum && courseDetails.curriculum.length > 0) {
+        const formattedLectures = courseDetails.curriculum.map(lecture => ({
+          ...lecture,
+          id: lecture._id || lecture.id || Date.now(),
+          videoUrl: lecture.videoUrl,
+          pdfUrl: lecture.pdfUrl,
+          quiz: lecture.quiz
+        }));
+        setLectures(formattedLectures);
+      }
+    }
+  }, [courseDetails]);
   return (
     <div className='h-screen overflow-scroll flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0'>
       <form onSubmit={handleSubmit} className='flex flex-row justify-between max-w-[650px] gap-4 w-full text-gray-500'>
@@ -530,7 +758,7 @@ const AddCourse = () => {
             <select
               name="category"
               value={courseData.category}
-              onChange={handleSelectCatgeory}
+              onChange={handleCourseInputChange}
               className='outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500'
             >
               <option>Select...</option>
@@ -540,16 +768,7 @@ const AddCourse = () => {
               })}
             </select>
           </div>
-          {isCustomeCategory &&
-            <InputField
-              label="Category Name"
-              name="category"
-              value={courseData.category}
-              onChange={handleCourseInputChange}
-              placeholder="Type here"
-              required
-            />
-          }
+
           <InputField
             label="Primary Language"
             name="language"
@@ -565,7 +784,7 @@ const AddCourse = () => {
           />
 
           <button type="submit" className='bg-black text-white w-max py-2.5 px-8 rounded my-4 '>
-            CREATE COURSE
+            UPDATE COURSE
           </button>
         </div>
 
@@ -574,7 +793,8 @@ const AddCourse = () => {
             lectures={lectures}
             openQuizModal={openQuizModal}
             handleRemoveLecture={handleRemoveLecture}
-            isEditCourse={false}
+            handleEditLecture={handleEditLecture}
+            isEditCourse={true}
           />
 
           <div
@@ -617,17 +837,32 @@ const AddCourse = () => {
 
       <LectureModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setCurrentLectureId(null);
+          setLectureData({
+            title: '',
+            videoUrl: null,
+            public_id: '',
+            freePreview: false,
+            pdfUrl: null,
+            quiz: null,
+            Duration: ''
+          });
+          setVideoPreview(null);
+          setPdfPreview(null);
+        }}
         lectureData={lectureData}
         handleInputChange={handleInputChange}
         handleFileUpload={handleFileUpload}
         videoPreview={videoPreview}
         pdfPreview={pdfPreview}
         handleAddLecture={handleAddLecture}
-        handleRemovePdf={() => setPdfPreview(null)}
-        handleRemoveVideo={() => setVideoPreview(null)}
-
+        isEditing={!!currentLectureId}
+        handleRemoveVideo={handleRemoveVideo}
+        handleRemovePdf={handleRemovePdf}
       />
+
 
       <QuizModal
         isOpen={isQuizModalOpen}
@@ -640,6 +875,8 @@ const AddCourse = () => {
         removeQuestionFromQuiz={removeQuestionFromQuiz}
         saveQuiz={addQuizToLecture}
         setQuizData={setQuizData}
+
+
       />
 
       <CourseQuizModal
@@ -660,4 +897,4 @@ const AddCourse = () => {
   );
 };
 
-export default AddCourse;
+export default EditCourse;

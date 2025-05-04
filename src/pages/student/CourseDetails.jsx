@@ -1,8 +1,7 @@
 import Footer from '../../components/student/Footer';
 import { assets } from '../../assets/assets';
-
-const CourseDetails = () => {  
-  return  (
+const CourseDetails = () => {
+  return (
     <>
       <div className="flex md:flex-row flex-col-reverse gap-10 relative items-start justify-between md:px-36 px-8 md:pt-20 pt-10 text-left">
         <div className="absolute top-0 left-0 w-full h-section-height -z-1 bg-gradient-to-b from-cyan-100/70"></div>
@@ -17,7 +16,7 @@ const CourseDetails = () => {
           <div className='flex items-center space-x-2 pt-3 pb-1 text-sm'>
             <p></p>
             <div className='flex'>
-            
+
             </div>
             <p className='text-blue-600'> rating</p>
 
@@ -29,32 +28,32 @@ const CourseDetails = () => {
           <div className="pt-8 text-gray-800">
             <h2 className="text-xl font-semibold">Course Structure</h2>
             <div className="pt-5">
-                <div  className="border border-gray-300 bg-white mb-2 rounded">
-                  <div
-                    className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
-          
-                  >
-                    <div className="flex items-center gap-2">
-                      <img src={assets.down_arrow_icon} alt="arrow icon" className={`transform transition-transform}`} />
-                      <p className="font-medium md:text-base text-sm">chapter title</p>
-                    </div>
-                    <p className="text-sm md:text-default">44</p>
-                  </div>
+              <div className="border border-gray-300 bg-white mb-2 rounded">
+                <div
+                  className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
 
-                  <div className={`overflow-hidden transition-all duration-300   "max-h-0"}`} >
-                    <ul className="list-disc md:pl-10 pl-4 pr-4 py-2 text-gray-600 border-t border-gray-300">
-                        <li  className="flex items-start gap-2 py-1">
-                          <img src={assets.play_icon} alt="bullet icon" className="w-4 h-4 mt-1" />
-                          <div className="flex items-center justify-between w-full text-gray-800 text-xs md:text-default">
-                            <p>lectureTitle</p>
-                            <div className='flex gap-2'>
-                             
-                            </div>
-                          </div>
-                        </li>
-                    </ul>
+                >
+                  <div className="flex items-center gap-2">
+                    <img src={assets.down_arrow_icon} alt="arrow icon" className={`transform transition-transform}`} />
+                    <p className="font-medium md:text-base text-sm">chapter title</p>
                   </div>
+                  <p className="text-sm md:text-default">44</p>
                 </div>
+
+                <div className={`overflow-hidden transition-all duration-300   "max-h-0"}`} >
+                  <ul className="list-disc md:pl-10 pl-4 pr-4 py-2 text-gray-600 border-t border-gray-300">
+                    <li className="flex items-start gap-2 py-1">
+                      <img src={assets.play_icon} alt="bullet icon" className="w-4 h-4 mt-1" />
+                      <div className="flex items-center justify-between w-full text-gray-800 text-xs md:text-default">
+                        <p>lectureTitle</p>
+                        <div className='flex gap-2'>
+
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -66,7 +65,7 @@ const CourseDetails = () => {
         </div>
 
         <div className="max-w-course-card z-10 shadow-custom-card rounded-t md:rounded-none overflow-hidden bg-white min-w-[300px] sm:min-w-[420px]">
-      
+
           <div className="p-5">
             <div className="flex items-center gap-2">
               <img className="w-3.5" src={assets.time_left_clock_icon} alt="time left clock icon" />
@@ -95,8 +94,8 @@ const CourseDetails = () => {
                 <p>6 lessons</p>
               </div>
             </div>
-            <button  className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium">
-               Already Enrolled
+            <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium">
+              Already Enrolled
             </button>
             <div className="pt-6">
               <p className="md:text-xl text-lg font-medium text-gray-800">What's in the course?</p>
@@ -113,7 +112,7 @@ const CourseDetails = () => {
       </div>
       <Footer />
     </>
-  ) 
+  )
 };
 
 export default CourseDetails;
