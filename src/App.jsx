@@ -15,6 +15,13 @@ import Player from './pages/student/Player';
 import MyEnrollments from './pages/student/MyEnrollments';
 import Loading from './components/student/Loading';
 import Footer from './components/student/Footer';
+import AdminDashboard from './pages/admin/AdminDashboard'
+import UsersController from './pages/admin/UsersController'
+import CoursesController from './pages/admin/CoursesController';
+import AuthForm from './pages/AuthForm/AuthForm';
+import Catgories from './pages/educator/Categories';
+
+
 import SignUp from './pages/signup/SignUp';
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
@@ -22,6 +29,7 @@ import EditCourse from './pages/educator/EditCourse';
 import Navbar from './components/student/Navbar';
 import Loader from './components/Loader/Loader';
 import { useSelector } from 'react-redux';
+
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
   const loadingStatus = useSelector((state) => state.auth.loading)
@@ -75,6 +83,22 @@ const App = () => {
       {userRole === "student" && < Navbar />}
       {loadingStatus && <Loader />}
       <Routes>
+        <Route path="/" element={token ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/login" element={!token ? <AuthForm setToken={setToken} /> : <Navigate to="/" />} />
+        <Route path="/signup" element={<AuthForm />} />
+
+        <Route path="/admin" element={<AdminDashboard />}>
+          <Route path="users-controller" element={<UsersController />} />
+          <Route path="courses-controller" element={<CoursesController />} />
+        </Route>
+        
+        {/* <Route path="/courses-controller" element={<CoursesController />} /> */}
+        <Route path="/coursedetails" element={<CourseDetails />} />
+        <Route path="/course-list" element={<CoursesList />} />
+        <Route path="/course-list/:input" element={<CoursesList />} />
+        <Route path="/my-enrollments" element={<MyEnrollments />} />
+        <Route path="/player/:courseId" element={<Player />} />
+
         <Route path="/" element={token ? (userRole === "instructor" ? <Navigate to="/educator" /> : <Home />) : <Navigate to="/login" />} />
 
         <Route path="/login" element={!token ? <AuthForm setToken={setToken} setUserRole={setUserRole} /> : <Navigate to={getRedirectPath()} />} />
@@ -86,6 +110,7 @@ const App = () => {
         <Route path="/course-list/:input" element={token ? <CoursesList /> : <Navigate to="/login" />} />
         <Route path="/my-enrollments" element={token ? <MyEnrollments /> : <Navigate to="/login" />} />
         <Route path="/player/:courseId" element={token ? <Player /> : <Navigate to="/login" />} />
+
         <Route path="/loading/:path" element={<Loading />} />
 
         <Route path='/educator' element={token && userRole === "instructor" ? <Educator userData={userData} /> : <Navigate to={token ? "/" : "/login"} />}>
