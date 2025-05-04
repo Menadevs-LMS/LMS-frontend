@@ -15,14 +15,9 @@ import Player from './pages/student/Player';
 import MyEnrollments from './pages/student/MyEnrollments';
 import Loading from './components/student/Loading';
 import Footer from './components/student/Footer';
-
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UsersController from './pages/admin/UsersController'
 import CoursesController from './pages/admin/CoursesController';
-
-
-
-
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
 
