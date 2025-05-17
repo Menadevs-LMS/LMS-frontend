@@ -5,7 +5,6 @@ const courseList = createSlice({
     initialState: {},
     reducers: {
         setCourseList: (state, action) => {
-
         },
 
     }

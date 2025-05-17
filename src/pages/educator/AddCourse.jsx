@@ -388,19 +388,7 @@ const AddCourse = () => {
     setPdfPreview(null);
     setIsModalOpen(false);
   };
-  // const validateCourse = () => {
-  //   if (!courseData.title) {
-  //     alert('Please enter a course title');
-  //     return false;
-  //   }
 
-  //   if (lectures.length === 0) {
-  //     alert('Please add at least one lecture');
-  //     return false;
-  //   }
-
-  //   return true;
-  // };
   const openCourseQuizModal = () => {
     setIsCourseQuizModalOpen(true);
   };

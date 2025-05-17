@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const AuthForm = ({ setToken }) => {
+const AuthForm = ({ setToken, setUserRole }) => {
     const [isActive, setIsActive] = useState(false);
     const [userName, setName] = useState("");
     const [userEmail, setEmail] = useState("");
@@ -51,18 +51,23 @@ const AuthForm = ({ setToken }) => {
                 localStorage.setItem('accessToken', response.data.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
                 const userRole = response.data.data.user.role;
-                console.log("userRole AuthForm>>>>>>>>", userRole)
-                if (userRole === "instructor") {
-                    console.log("To educator authform")
-
-                    navigate("/educator");
-                } else {
-                    console.log("To Home authform")
-
-                    navigate("/");
-                }
+                console.log("userRole AuthForm>>>>>>>>", userRole);
+                
+                // Set the user role in parent component state
+                setUserRole(userRole);
+                
+                // Set token before navigation
                 setToken(response.data.data.accessToken);
-
+                
+                setTimeout(() => {
+                    if (userRole === "admin") {
+                        navigate("/admin");
+                    } else if (userRole === "instructor") {
+                        navigate("/educator");
+                    } else {
+                        navigate("/");
+                    }
+                }, 0);
             });
 
         } catch (err) {
@@ -70,8 +75,6 @@ const AuthForm = ({ setToken }) => {
             setError(err.response?.data?.message || "Login failed. Please try again.");
         }
     };
-
-
 
     const handleRegister = async (event) => {
         event?.preventDefault();
@@ -97,7 +100,9 @@ const AuthForm = ({ setToken }) => {
             if (response.data.success) {
                 localStorage.setItem('accessToken', response.data.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
-
+                
+                // Also update the role for the register flow
+                setUserRole("student");
                 setToken(response.data.data.accessToken);
                 navigate('/');
             }

@@ -1,31 +1,49 @@
-const InputField = ({ label, name, value, onChange, type = 'text', placeholder, required = false, isTextArea = false }) => {
+import React from 'react';
+
+const InputField = ({
+    label,
+    name,
+    register,
+    errors,
+    type = 'text',
+    placeholder,
+    required = false,
+    isTextArea = false,
+    validation = {},
+    defaultValue = ''
+}) => {
     const inputClass = "outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500 w-full";
+    const errorClass = "border-red-500";
 
     return (
         <div className='flex flex-col gap-1 mb-4'>
-            <p>{label}</p>
+            <p className="flex">
+                {label}
+                {required && <span className="text-red-500 ml-1">*</span>}
+            </p>
+
             {isTextArea ? (
                 <textarea
-                    name={name}
-                    value={value}
-                    onChange={onChange}
+                    {...register(name, validation)}
                     placeholder={placeholder}
-                    className={inputClass}
-                    required={required}
+                    className={`${inputClass} ${errors[name] ? errorClass : ''}`}
+                    defaultValue={defaultValue}
                 />
             ) : (
                 <input
                     type={type}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
+                    {...register(name, validation)}
                     placeholder={placeholder}
-                    className={inputClass}
-                    required={required}
+                    className={`${inputClass} ${errors[name] ? errorClass : ''}`}
+                    defaultValue={defaultValue}
                 />
+            )}
+
+            {errors[name] && (
+                <p className="text-red-500 text-sm mt-1">{errors[name].message}</p>
             )}
         </div>
     );
 };
 
-export default InputField
+export default InputField;

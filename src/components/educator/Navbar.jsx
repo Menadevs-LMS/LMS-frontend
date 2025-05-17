@@ -1,17 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import { assets } from '../../assets/assets';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 
 
-const Navbar = ({ userData, bgColor}) => {
+const Navbar = ({ userData, bgColor }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
-
+  const navigate = useNavigate()
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
 
+  const handleLogOut = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('user');
+  
+  window.dispatchEvent(new Event('localStorageChange'));
+    navigate('/login');
+  }
 
 
 
@@ -37,7 +45,7 @@ const Navbar = ({ userData, bgColor}) => {
             </div>
             <div className="py-1">
               <button
-                onClick={() => { }}
+                onClick={() => handleLogOut()}
                 className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

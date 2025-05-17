@@ -20,10 +20,17 @@ const Navbar = () => {
 
         </div>
 
-        <UserButton />
-        <button onClick={() => openSignIn()} className="bg-blue-600 text-white px-5 py-2 rounded-full">
-          Create Account
-        </button>
+       
+           <UserButton />
+           <button onClick={() => openSignIn()} className="bg-green-600 text-white px-5 py-2 rounded-full">
+            Create Account
+          </button>
+
+//         <UserButton />
+//         <button onClick={() => openSignIn()} className="bg-blue-600 text-white px-5 py-2 rounded-full">
+//           Create Account
+//         </button>
+// >>>>>>> main
       </div>
       {/* For Phone Screens */}
       <div className='md:hidden flex items-center gap-2 sm:gap-5 text-gray-500'>
