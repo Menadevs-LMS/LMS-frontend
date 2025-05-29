@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bell, Plus, Edit, Pencil } from 'lucide-react';
+import { Bell, Plus, Edit } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import InputField from '../../components/InputField';
 import ThumbnailUpload from '../../components/ThumbnailUpload';
 import SelectField from '../../components/SelectField';
@@ -13,47 +12,11 @@ import LectureModal from '../../components/LectureModal';
 import QuizModal from '../../components/QuizModal';
 import CourseQuizModal from '../../components/CourseQuizModal';
 import LecturesList from '../../components/LecturesList';
-import { editCourse } from "../../store/courses";
+import { editCourse, } from "../../store/courses";
 import { getCourseDetails } from '../../store/coursdetails';
-
 import { setLoading } from '../../store/auth';
 import { getAllCategories } from '../../store/categories';
-
-const questionSchema = z.object({
-    questionText: z.string().min(1, "Question text is required"),
-    questionType: z.enum(["multiple-choice", "truth-sentence", "paragraph"]),
-    options: z.array(z.string()).optional(),
-    correctAnswer: z.string().optional(),
-    truthAnswers: z.array(z.string()).optional(),
-    paragraphAnswer: z.string().optional(),
-});
-
-const quizSchema = z.object({
-    title: z.string().min(1, "Quiz title is required"),
-    questions: z.array(questionSchema),
-});
-
-const lectureSchema = z.object({
-    id: z.string().or(z.number()),
-    title: z.string().min(3, "Title must be at least 3 characters"),
-    Duration: z.string().min(2, "Duration is required"),
-    videoUrl: z.any().optional(),
-    pdfUrl: z.any().optional(),
-    freePreview: z.boolean().default(false),
-    quiz: quizSchema.nullable().optional(),
-});
-
-const courseSchema = z.object({
-    title: z.string().min(5, "Title must be at least 5 characters"),
-    subtitle: z.string().min(10, "Subtitle must be at least 10 characters"),
-    welcomeMessage: z.string().min(1, "Welcome message is required"),
-    description: z.string().min(50, "Description must be at least 50 characters"),
-    category: z.string().min(1, "Category is required"),
-    language: z.string().min(1, "Language is required"),
-    image: z.any().nullable().optional(),
-    curriculum: z.array(lectureSchema).default([]),
-    quiz: quizSchema.optional(),
-});
+import { courseSchema } from '../../schems/schems'
 
 const EditCourseController = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -76,7 +39,7 @@ const EditCourseController = () => {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { courseId } = useParams(); // Get course ID from URL params
+    const { courseId } = useParams();
     const categoriesState = useSelector((state) => state.categories.categories || []);
     const courseDetails = useSelector((state) => state.courseDetails?.course);
 
@@ -88,7 +51,7 @@ const EditCourseController = () => {
         setValue,
         getValues,
         reset,
-        formState: { errors, isSubmitting }
+        formState: { errors, isSubmitting, isDirty, isValid }
     } = useForm({
         resolver: zodResolver(courseSchema),
         defaultValues: {
@@ -112,7 +75,7 @@ const EditCourseController = () => {
         name: "curriculum",
     });
 
-    // Helper functions
+
     const showNotification = (type, message, duration = 5000) => {
         setNotification({ show: true, type, message });
         setTimeout(() => {
@@ -120,7 +83,6 @@ const EditCourseController = () => {
         }, duration);
     };
 
-    // Fetch course data when component mounts
     useEffect(() => {
         if (courseId) {
             dispatch(setLoading(true));
@@ -138,16 +100,13 @@ const EditCourseController = () => {
         }
     }, [courseId, dispatch, navigate]);
 
-    // Populate form with existing course data
     const populateFormWithCourseData = (course) => {
         console.log("Populating form with course data:", course);
-        
-        // Format the curriculum to match the form schema
+
         const formattedCurriculum = course.curriculum?.map(lecture => {
-            // Extract ID correctly, handling MongoDB ObjectId format
             const lectureId = lecture.id || (lecture._id?.$oid ? lecture._id.$oid : lecture._id);
             console.log("Processing lecture with ID:", lectureId);
-            
+
             // Handle the lecture's quiz if it exists
             let formattedQuiz = null;
             if (lecture.quiz) {
@@ -160,7 +119,7 @@ const EditCourseController = () => {
                     })) || []
                 };
             }
-            
+
             return {
                 id: lectureId,
                 title: lecture.title,
@@ -172,7 +131,6 @@ const EditCourseController = () => {
             };
         }) || [];
 
-        // Format the course quiz
         let formattedCourseQuiz = { title: '', questions: [] };
         if (course.quiz) {
             formattedCourseQuiz = {
@@ -188,7 +146,6 @@ const EditCourseController = () => {
         console.log("Formatted curriculum:", formattedCurriculum);
         console.log("Formatted course quiz:", formattedCourseQuiz);
 
-        // Reset the form with the course data
         reset({
             title: course.title || '',
             subtitle: course.subtitle || '',
@@ -201,7 +158,6 @@ const EditCourseController = () => {
             quiz: formattedCourseQuiz
         });
 
-        // Set custom category state if needed
         setIsCustomCategory(
             !categoriesState.some(cat => cat.categoreName === course.category)
         );
@@ -220,52 +176,48 @@ const EditCourseController = () => {
 
     const handleAddLecture = (lectureData) => {
         if (editingLecture) {
-            // Update existing lecture
             const curriculum = getValues('curriculum');
-            const updatedCurriculum = curriculum.map(lecture => 
-                String(lecture.id) === String(editingLecture.id) 
-                    ? { ...lectureData, id: lecture.id, quiz: lecture.quiz } 
+            const updatedCurriculum = curriculum.map(lecture =>
+                String(lecture.id) === String(editingLecture.id)
+                    ? { ...lectureData, id: lecture.id, quiz: lecture.quiz }
                     : lecture
             );
             setValue('curriculum', updatedCurriculum);
             showNotification('success', 'Lecture updated successfully');
         } else {
-            // Add new lecture
             append({
                 ...lectureData,
                 id: Date.now().toString()
             });
             showNotification('success', 'Lecture added successfully');
         }
-        
-        // Reset state
+
         setIsModalOpen(false);
         setVideoPreview(null);
         setPdfPreview(null);
         setEditingLecture(null);
     };
-    
+
     const handleEditLecture = (lectureId) => {
         const lectureToEdit = getValues('curriculum').find(
             lecture => String(lecture.id) === String(lectureId)
         );
-        
+
         console.log("Editing lecture:", lectureToEdit);
-        
+
         if (lectureToEdit) {
             setEditingLecture(lectureToEdit);
-            
-            // Set previews if URLs exist
+
             if (lectureToEdit.videoUrl) {
                 console.log("Setting video preview:", lectureToEdit.videoUrl);
                 setVideoPreview(lectureToEdit.videoUrl);
             }
-            
+
             if (lectureToEdit.pdfUrl) {
                 console.log("Setting PDF preview:", lectureToEdit.pdfUrl);
                 setPdfPreview(lectureToEdit.pdfUrl);
             }
-            
+
             setIsModalOpen(true);
         }
     };
@@ -303,7 +255,7 @@ const EditCourseController = () => {
         const lecture = getValues('curriculum').find(
             lecture => String(lecture.id) === String(lectureId)
         );
-        
+
         const lectureQuiz = lecture?.quiz || null;
         console.log("Lecture quiz data:", lectureQuiz);
         setCurrentLectureQuiz(lectureQuiz);
@@ -316,74 +268,64 @@ const EditCourseController = () => {
         showNotification('success', 'Course quiz updated successfully');
     };
 
-    // Open the course quiz modal with existing data
     const openCourseQuizModal = () => {
-        // Make sure we use the existing quiz data
         const currentQuiz = getValues('quiz');
-        
-        // Ensure questions are properly set up
+
         if (!currentQuiz || !currentQuiz.questions || !Array.isArray(currentQuiz.questions)) {
             setValue('quiz', {
                 title: currentQuiz?.title || '',
                 questions: []
             });
         }
-        
+
         console.log("Opening course quiz modal with data:", getValues('quiz'));
         setIsCourseQuizModalOpen(true);
     };
 
-    // File handling
     const uploadToS3 = async (file) => {
         if (!file) return null;
-      
-        try {
-          console.log("Attempting to upload file:", file.name || "Unknown file");
-          const formData = new FormData();
-          formData.append('file', file);
-      
-          const response = await axios.post(`${backendUrl}/media/upload`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setUploadProgress(prev => Math.max(prev, percentCompleted));
-            },
-            // Add a longer timeout for larger files
-            timeout: 60000 // 60 seconds
-          });
-      
-          if (!response.data?.data?.Location) {
-            throw new Error("Upload response missing Location URL");
-          }
-      
-          console.log("File uploaded successfully:", response.data.data.Location);
-          return response.data.data.Location;
-        } catch (error) {
-          console.error("S3 upload error:", error);
-          
-          // Provide more detailed error message based on the error type
-          let errorMessage = "File upload failed";
-          
-          if (error.response) {
-            // The server responded with a status code outside the 2xx range
-            errorMessage = `Server error: ${error.response.status} - ${error.response.data?.message || "Unknown error"}`;
-          } else if (error.request) {
-            // The request was made but no response was received
-            errorMessage = "Network error: No response received from server";
-          } else {
-            // Something else caused the error
-            errorMessage = error.message || "Unknown upload error";
-          }
-          
-          throw new Error(errorMessage);
-        }
-      };
 
-    // Extract file from various possible formats
+        try {
+            console.log("Attempting to upload file:", file.name || "Unknown file");
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await axios.post(`${backendUrl}/media/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round(
+                        (progressEvent.loaded * 100) / progressEvent.total
+                    );
+                    setUploadProgress(prev => Math.max(prev, percentCompleted));
+                },
+                timeout: 60000
+            });
+
+            if (!response.data?.data?.Location) {
+                throw new Error("Upload response missing Location URL");
+            }
+
+            console.log("File uploaded successfully:", response.data.data.Location);
+            return response.data.data.Location;
+        } catch (error) {
+            console.error("S3 upload error:", error);
+
+            let errorMessage = "File upload failed";
+
+            if (error.response) {
+                errorMessage = `Server error: ${error.response.status} - ${error.response.data?.message || "Unknown error"}`;
+            } else if (error.request) {
+                errorMessage = "Network error: No response received from server";
+            } else {
+                errorMessage = error.message || "Unknown upload error";
+            }
+
+            throw new Error(errorMessage);
+        }
+    };
+
     const extractFile = (fileData) => {
         if (fileData instanceof File) {
             return fileData;
@@ -405,113 +347,101 @@ const EditCourseController = () => {
         return null;
     };
 
-    // Update the prepareUploads function in EditCourse.jsx
 
-const prepareUploads = async (data) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-  
-    try {
-      // Process course image
-      let imageUrl = null;
-      const imageFile = extractFile(data.image);
-      console.log("Image file to upload:", imageFile, "Type:", typeof imageFile);
-      
-      // Skip upload if it's already a URL
-      if (typeof imageFile === 'string') {
-        imageUrl = imageFile; // Keep existing URL
-      } else if (imageFile) {
+    const prepareUploads = async (data) => {
+        setIsUploading(true);
+        setUploadProgress(0);
+
         try {
-          imageUrl = await uploadToS3(imageFile);
+            let imageUrl = null;
+            const imageFile = extractFile(data.image);
+            console.log("Image file to upload:", imageFile, "Type:", typeof imageFile);
+
+            if (typeof imageFile === 'string') {
+                imageUrl = imageFile; // Keep existing URL
+            } else if (imageFile) {
+                try {
+                    imageUrl = await uploadToS3(imageFile);
+                } catch (error) {
+                    console.error("Image upload failed:", error);
+                    showNotification('warning', 'Image upload failed. Keeping existing image.');
+                    imageUrl = courseDetails?.image || null;
+                }
+            }
+            setUploadProgress(20);
+
+            const updatedLectures = await Promise.all(data.curriculum.map(async (lecture, index) => {
+                const pdfFile = extractFile(lecture.pdfUrl);
+                const videoFile = extractFile(lecture.videoUrl);
+                let pdfUrl = null;
+                let videoUrl = null;
+
+                console.log(`Lecture ${index} - PDF:`, pdfFile, "Video:", videoFile);
+                if (typeof pdfFile === 'string') {
+                    pdfUrl = pdfFile;
+                } else if (pdfFile) {
+                    try {
+                        pdfUrl = await uploadToS3(pdfFile);
+                    } catch (error) {
+                        console.error(`PDF upload failed for lecture ${index}:`, error);
+                        showNotification('warning', `PDF upload failed for lecture "${lecture.title}". Keeping existing PDF.`);
+
+                        const originalLecture = courseDetails?.curriculum?.find(
+                            l => String(l.id || l._id?.$oid || l._id) === String(lecture.id)
+                        );
+                        pdfUrl = originalLecture?.pdfUrl || null;
+                    }
+                }
+
+                if (typeof videoFile === 'string') {
+                    videoUrl = videoFile;
+                } else if (videoFile) {
+                    try {
+                        videoUrl = await uploadToS3(videoFile);
+                    } catch (error) {
+                        console.error(`Video upload failed for lecture ${index}:`, error);
+                        showNotification('warning', `Video upload failed for lecture "${lecture.title}". Keeping existing video.`);
+
+                        const originalLecture = courseDetails?.curriculum?.find(
+                            l => String(l.id || l._id?.$oid || l._id) === String(lecture.id)
+                        );
+                        videoUrl = originalLecture?.videoUrl || null;
+                    }
+                }
+
+                setUploadProgress(prev => prev + Math.floor(80 / data.curriculum.length));
+
+                return {
+                    ...lecture,
+                    videoUrl,
+                    pdfUrl
+                };
+            }));
+
+            setUploadProgress(100);
+
+            return {
+                ...data,
+                image: imageUrl,
+                curriculum: updatedLectures
+            };
         } catch (error) {
-          console.error("Image upload failed:", error);
-          showNotification('warning', 'Image upload failed. Keeping existing image.');
-          // Use existing image URL from course details if available
-          imageUrl = courseDetails?.image || null;
+            showNotification('error', 'Failed to process files: ' + (error.message || 'Unknown error'));
+            console.log("Upload error details:", error);
+            throw error;
+        } finally {
+            setIsUploading(false);
         }
-      }
-      setUploadProgress(20);
-  
-      // Process lectures
-      const updatedLectures = await Promise.all(data.curriculum.map(async (lecture, index) => {
-        const pdfFile = extractFile(lecture.pdfUrl);
-        const videoFile = extractFile(lecture.videoUrl);
-        let pdfUrl = null;
-        let videoUrl = null;
-  
-        console.log(`Lecture ${index} - PDF:`, pdfFile, "Video:", videoFile);
-  
-        // Handle PDF file
-        if (typeof pdfFile === 'string') {
-          pdfUrl = pdfFile; // Keep existing URL
-        } else if (pdfFile) {
-          try {
-            pdfUrl = await uploadToS3(pdfFile);
-          } catch (error) {
-            console.error(`PDF upload failed for lecture ${index}:`, error);
-            showNotification('warning', `PDF upload failed for lecture "${lecture.title}". Keeping existing PDF.`);
-            
-            // Find the existing lecture in courseDetails to get the original URL
-            const originalLecture = courseDetails?.curriculum?.find(
-              l => String(l.id || l._id?.$oid || l._id) === String(lecture.id)
-            );
-            pdfUrl = originalLecture?.pdfUrl || null;
-          }
-        }
-  
-        // Handle Video file
-        if (typeof videoFile === 'string') {
-          videoUrl = videoFile; // Keep existing URL
-        } else if (videoFile) {
-          try {
-            videoUrl = await uploadToS3(videoFile);
-          } catch (error) {
-            console.error(`Video upload failed for lecture ${index}:`, error);
-            showNotification('warning', `Video upload failed for lecture "${lecture.title}". Keeping existing video.`);
-            
-            // Find the existing lecture in courseDetails to get the original URL
-            const originalLecture = courseDetails?.curriculum?.find(
-              l => String(l.id || l._id?.$oid || l._id) === String(lecture.id)
-            );
-            videoUrl = originalLecture?.videoUrl || null;
-          }
-        }
-  
-        setUploadProgress(prev => prev + Math.floor(80 / data.curriculum.length));
-  
-        return {
-          ...lecture,
-          videoUrl,
-          pdfUrl
-        };
-      }));
-  
-      setUploadProgress(100);
-  
-      return {
-        ...data,
-        image: imageUrl,
-        curriculum: updatedLectures
-      };
-    } catch (error) {
-      showNotification('error', 'Failed to process files: ' + (error.message || 'Unknown error'));
-      console.log("Upload error details:", error);
-      throw error;
-    } finally {
-      setIsUploading(false);
-    }
-  };
+    };
 
     const onSubmit = async (data) => {
         dispatch(setLoading(true));
 
         try {
-            console.log("Form data before processing:", data);
             const processedData = await prepareUploads(data);
-            console.log("Processed data for submission:", processedData);
 
             const payload = {
-                id: courseId, 
+                id: courseId,
                 quiz: processedData.quiz,
                 curriculum: processedData.curriculum,
                 date: new Date().toString(),
@@ -524,28 +454,11 @@ const prepareUploads = async (data) => {
                 category: processedData.category
             };
 
-            console.log("Submitting payload to API:", payload);
-
-            // Use PUT to update the existing course
-            const response = await axios.put(
-                `${backendUrl}/instructor/course/update/${courseId}`, 
-                payload, 
-                {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            console.log("API Response:", response);
-            
-            // Dispatch update action to Redux
-            dispatch(editCourse(payload));
-            
+            dispatch(editCourse({ id: courseId, data: payload }));
             showNotification('success', 'Course updated successfully');
             setTimeout(() => {
                 navigate("/educator/my-courses");
-            }, 2000);
+            }, 1000);
         } catch (error) {
             showNotification('error', 'Failed to update course: ' + (error.message || 'Unknown error'));
             console.error('Update error:', error);
@@ -554,7 +467,6 @@ const prepareUploads = async (data) => {
         }
     };
 
-    // Fetch categories on component mount
     useEffect(() => {
         dispatch(getAllCategories());
     }, [dispatch]);
@@ -565,7 +477,7 @@ const prepareUploads = async (data) => {
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-red-600">Error</h2>
                     <p className="mt-2">No course ID provided. Cannot edit course.</p>
-                    <button 
+                    <button
                         onClick={() => navigate('/educator/my-courses')}
                         className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     >
@@ -578,7 +490,6 @@ const prepareUploads = async (data) => {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            {/* Header */}
             <div className="bg-green-600 text-white py-6 shadow-md mb-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h1 className="text-3xl font-bold">Course Management Dashboard</h1>
@@ -586,11 +497,10 @@ const prepareUploads = async (data) => {
                 </div>
             </div>
 
-            {/* Notification */}
             {notification.show && (
                 <div className={`fixed top-4 right-4 max-w-xs p-4 rounded-md shadow-lg z-50 ${notification.type === 'success' ? 'bg-green-500' :
-                        notification.type === 'error' ? 'bg-red-500' :
-                            notification.type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
+                    notification.type === 'error' ? 'bg-red-500' :
+                        notification.type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
                     } text-white`}>
                     <p>{notification.message}</p>
                 </div>
@@ -834,9 +744,9 @@ const prepareUploads = async (data) => {
                                         </button>
                                         <button
                                             type="submit"
-                                            disabled={isUploading || isSubmitting}
-                                            className={`px-6 py-2 rounded-md transition-colors ${isUploading || isSubmitting
-                                                ? 'bg-gray-400 cursor-not-allowed'
+                                            disabled={!isDirty || !isValid}
+                                            className={`px-6 py-2 rounded-md transition-colors ${!isDirty || !isValid
+                                                ? 'bg-green-600 cursor-not-allowed opacity-15'
                                                 : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                                                 }`}
                                         >

@@ -25,7 +25,7 @@ const CoursesController = ({ userRole }) => {
   const categoriesState = useSelector((state) => state.categories.categories);
 
 
-
+  console.log("userRole>>", userRole)
 
   const showNotification = (type, message, duration = 5000) => {
     setNotification({ show: true, type, message });
@@ -85,10 +85,8 @@ const CoursesController = ({ userRole }) => {
   useEffect(() => {
     dispatch(getAllCategories());
   }, [dispatch])
-  // Reset form
 
 
-  // Search and filter courses
   const handleSearch = async () => {
     try {
       setIsLoading(true);
@@ -106,14 +104,12 @@ const CoursesController = ({ userRole }) => {
     }
   };
 
-  // Reset search
   const resetSearch = () => {
     setSearchTerm('');
     setSelectedCategory('');
     fetchCourses();
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchCourses();
     dispatch(getAllCourses());
@@ -152,7 +148,6 @@ const CoursesController = ({ userRole }) => {
           </div>
         )}
 
-        {/* Confirmation Modal */}
         {showConfirmModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
@@ -311,7 +306,7 @@ const CoursesController = ({ userRole }) => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
-                            onClick={() => navigation(`${userRole == 'admin' ? `/admin/edit-course/${course._id}` : `/educator/edit-course/${course._id}`}`)}
+                            onClick={() => navigation(`${userRole === 'admin' ? `/admin/edit-course/${course._id}` : `/educator/edit-course/${course._id}`}`)}
                             className="text-green-600 hover:text-green-900 mr-4 flex items-center"
                           >
 

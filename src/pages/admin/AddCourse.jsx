@@ -16,6 +16,7 @@ import LecturesList from '../../components/LecturesList';
 import { setLoading } from '../../store/auth';
 import { getAllCategories } from '../../store/categories';
 
+// Schema definitions
 const questionSchema = z.object({
   questionText: z.string().min(1, "Question text is required"),
   questionType: z.enum(["multiple-choice", "truth-sentence", "paragraph"]),
@@ -80,7 +81,7 @@ const CoursesController = () => {
     setValue,
     getValues,
     reset,
-    formState: { errors, isSubmitting, isDirty, isValid }
+    formState: { errors, isSubmitting }
   } = useForm({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -104,6 +105,7 @@ const CoursesController = () => {
     name: "curriculum",
   });
 
+  // Helper functions
   const showNotification = (type, message, duration = 5000) => {
     setNotification({ show: true, type, message });
     setTimeout(() => {
@@ -229,6 +231,7 @@ const CoursesController = () => {
   };
 
   const prepareUploads = async (data) => {
+    console.log("data",data)
     setIsUploading(true);
     setUploadProgress(0);
 

@@ -4,8 +4,7 @@ import Home from './pages/student/Home';
 import CourseDetails from './pages/student/CourseDetails';
 import CoursesList from './pages/student/CoursesList';
 import Dashboard from './pages/educator/Dashboard';
-import AddCourse from './pages/educator/AddCourse';
-import MyCourses from './pages/educator/MyCourses';
+
 import StudentsEnrolled from './pages/educator/StudentsEnrolled';
 import Educator from './pages/educator/Educator';
 import 'quill/dist/quill.snow.css';
@@ -20,13 +19,11 @@ import CoursesController from './pages/admin/CoursesController';
 import AuthForm from './pages/AuthForm/AuthForm';
 import Catgories from './pages/educator/Categories';
 import SignUp from './pages/signup/SignUp';
-import EditCourse from './pages/educator/EditCourse';
 import Navbar from './components/student/Navbar';
 import Loader from './components/Loader/Loader';
 import { useSelector } from 'react-redux';
 import AddCourseAdmin from './pages/admin/AddCourse';
 import EditCourseAdmin from './pages/admin/EditCourse';
-// Import the ProtectedRoute component
 import ProtectedRoute from './ProtectedRoute';
 
 const App = () => {
@@ -35,37 +32,36 @@ const App = () => {
   const [userRole, setUserRole] = useState('');
   const [userData, setUserData] = useState({});
 
-useEffect(() => {
-  const handleStorageChange = () => {
-    setToken(localStorage.getItem("accessToken"));
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setToken(localStorage.getItem("accessToken"));
 
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUserData(parsedUser);
-        setUserRole(parsedUser.role || '');
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUserData(parsedUser);
+          setUserRole(parsedUser.role || '');
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          setUserRole('');
+        }
+      } else {
         setUserRole('');
       }
-    } else {
-      setUserRole('');
-    }
-  };
+    };
 
-  handleStorageChange();
+    handleStorageChange();
 
-  window.addEventListener("storage", handleStorageChange);
-  window.addEventListener("localStorageChange", handleStorageChange);
-  
-  return () => {
-    window.removeEventListener("storage", handleStorageChange);
-    window.removeEventListener("localStorageChange", handleStorageChange);
-  };
-}, []);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("localStorageChange", handleStorageChange);
 
-  console.log("userRole>>>", userRole);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("localStorageChange", handleStorageChange);
+    };
+  }, []);
+
 
   return (
     <div className="text-default min-h-screen bg-white">
@@ -75,49 +71,49 @@ useEffect(() => {
         <Route
           path="/login"
           element={!token ? <AuthForm setToken={setToken} setUserRole={setUserRole} userRole={userRole} /> :
-            (userRole === "instructor" ? <Navigate to="/educator" /> : 
-             userRole === "admin" ? <Navigate to="/admin" /> : <Navigate to="/" />)}
+            (userRole === "instructor" ? <Navigate to="/educator" /> :
+              userRole === "admin" ? <Navigate to="/admin" /> : <Navigate to="/" />)}
         />
         <Route path="/signup" element={!token ? <SignUp /> : <Navigate to="/" />} />
-        
+
         <Route element={<ProtectedRoute allowedRoles={["student"]} redirectPath={userRole === "admin" ? "/admin" : "/educator"} />}>
           <Route path="/" element={<Home />} />
-          <Route path="/coursedetails" element={<CourseDetails />} />
+          <Route path="/coursedetails/:id" element={<CourseDetails />} />
           <Route path="/course-list" element={<CoursesList />} />
           <Route path="/course-list/:input" element={<CoursesList />} />
           <Route path="/my-enrollments" element={<MyEnrollments />} />
           <Route path="/player/:courseId" element={<Player />} />
         </Route>
-        
+
         <Route element={<ProtectedRoute allowedRoles={["admin"]} redirectPath={userRole === "instructor" ? "/educator" : "/"} />}>
           <Route path="/admin" element={<AdminDashboard />}>
             <Route path="" element={<Dashboard />} />
             <Route path="edit-course/:courseId" element={<EditCourseAdmin />} />
             <Route path='add-course' element={<AddCourseAdmin />} />
             <Route path="users-controller" element={<UsersController />} />
-            <Route path="courses-controller" element={<CoursesController />} />
+            <Route path="courses-controller" element={<CoursesController userRole={userRole} />} />
             <Route path="student-enrolled" element={<StudentsEnrolled />} />
             <Route path="categories" element={<Catgories />} />
           </Route>
         </Route>
-        
+
         <Route element={<ProtectedRoute allowedRoles={["instructor"]} redirectPath={userRole === "admin" ? "/admin" : "/"} />}>
           <Route path="/educator" element={<Educator userData={userData} />}>
             <Route path="" element={<Dashboard />} />
             <Route path="edit-course/:courseId" element={<EditCourseAdmin />} />
             <Route path='add-course' element={<AddCourseAdmin />} />
-            <Route path="my-courses" element={<CoursesController userRole={userRole}/>} />
+            <Route path="my-courses" element={<CoursesController userRole={userRole} />} />
             <Route path="student-enrolled" element={<StudentsEnrolled />} />
             <Route path="categories" element={<Catgories />} />
           </Route>
         </Route>
-        
+
         <Route path="/loading/:path" element={<Loading />} />
-        
+
         <Route path="*" element={
-          token ? 
-            (userRole === "instructor" ? <Navigate to="/educator" /> : 
-             userRole === "admin" ? <Navigate to="/admin" /> : <Navigate to="/" />) :
+          token ?
+            (userRole === "instructor" ? <Navigate to="/educator" /> :
+              userRole === "admin" ? <Navigate to="/admin" /> : <Navigate to="/" />) :
             <Navigate to="/login" />
         } />
       </Routes>

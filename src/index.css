@@ -70,3 +70,126 @@
 .rich-text ul { margin-left: 30px; list-style-type: disc; }
 
 .rich-text li { margin-bottom: 8px; }
+
+
+/* PDF Viewer Styles */
+.pdf-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 400px;
+}
+
+.pdf-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.pdf-error {
+  text-align: center;
+  padding: 40px;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.pdf-error h3 {
+  margin-top: 0;
+  color: #a00;
+}
+
+.pdf-error details {
+  margin-top: 15px;
+  text-align: left;
+}
+
+.pdf-error summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 5px;
+}
+
+.pdf-error ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.pdf-error a {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.pdf-controls {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.pdf-controls button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pdf-controls button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.pdf-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pdf-controls span {
+  font-weight: 500;
+  color: #333;
+}
+
+/* React-PDF specific styles */
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.react-pdf__Page {
+  max-width: calc(100vw - 2em);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1em;
+}
+
+.react-pdf__Page canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .pdf-container {
+    padding: 10px;
+  }
+  
+  .pdf-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pdf-controls button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
